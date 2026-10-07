@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-circle-notch"></i>
+                <span>Orbis</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/dashboard" class="nav-link active">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/transactions" class="nav-link">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>Transações</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link disabled" title="Em breve">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Relatórios</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link disabled" title="Em breve">
+                        <i class="fas fa-cog"></i>
+                        <span>Configurações</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <span class="user-name">{{ user.name | default('Usuário') }}</span>
+                </div>
+            </div>
+            <a href="/auth/logout" class="logout-btn" title="Sair">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="content-header">
+            <div>
+                <h1 class="page-title">Olá, {{ user.name | default('Visitante') }}</h1>
+                <p class="page-subtitle" id="current-month-year">Carregando data...</p>
+            </div>
+            <div class="header-actions">
+                <a href="/transactions" class="btn btn-primary btn-glow">
+                    <i class="fas fa-plus"></i> Nova Transação
+                </a>
+            </div>
+        </header>
+
+        <!-- Cards de Resumo -->
+        <section class="summary-cards">
+            <div class="card summary-card glow-hover">
+                <div class="card-icon bg-green-light">
+                    <i class="fas fa-wallet text-green"></i>
+                </div>
+                <div class="card-info">
+                    <h3 class="card-label">Saldo Total</h3>
+                    <p class="card-value text-green" id="saldo-total">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div class="card summary-card glow-hover">
+                <div class="card-icon bg-purple-light">
+                    <i class="fas fa-arrow-up text-purple"></i>
+                </div>
+                <div class="card-info">
+                    <h3 class="card-label">Receitas</h3>
+                    <p class="card-value text-purple" id="total-receitas">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div class="card summary-card glow-hover">
+                <div class="card-icon bg-red-light">
+                    <i class="fas fa-arrow-down text-red"></i>
+                </div>
+                <div class="card-info">
+                    <h3 class="card-label">Despesas</h3>
+                    <p class="card-value text-red" id="total-despesas">R$ 0,00</p>
+                </div>
+            </div>
+
+            <div class="card summary-card glow-hover">
+                <div class="card-icon bg-emerald-light">
+                    <i class="fas fa-percentage text-emerald"></i>
+                </div>
+                <div class="card-info">
+                    <h3 class="card-label">Economia</h3>
+                    <p class="card-value text-emerald" id="economia">0%</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gráficos -->
+        <section class="charts-section">
+            <div class="card chart-card main-chart-card glow-hover">
+                <div class="card-header">
+                    <h3 class="card-title">Receitas vs Despesas</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-receitas-despesas"></canvas>
+                </div>
+            </div>
+
+            <div class="card chart-card side-chart-card glow-hover">
+                <div class="card-header">
+                    <h3 class="card-title">Despesas por Categoria</h3>
+                </div>
+                <div class="chart-container donut-container">
+                    <canvas id="chart-categorias"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabela Últimas Transações -->
+        <section class="recent-transactions-section">
+            <div class="card table-card glow-hover">
+                <div class="card-header flex-between">
+                    <h3 class="card-title">Últimas Transações</h3>
+                    <a href="/transactions" class="btn btn-sm btn-outline">Ver todas</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="orbis-table" id="tabela-transacoes">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Categoria</th>
+                                <th class="text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-transacoes">
+                            <!-- Preenchido via JS -->
+                            <tr><td colspan="4" class="text-center text-gray py-4">Carregando transações...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/js/dashboard.js"></script>
+{% endblock %}

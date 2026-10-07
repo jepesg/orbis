@@ -1,0 +1,26 @@
+# Orbis - Dependências do projeto
+# Framework web
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Banco de dados
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.13.0
+
+# Autenticação
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Templates e formulários
+jinja2==3.1.2
+python-multipart==0.0.6
+
+# Validação
+pydantic[email]==2.5.2
+
+# Utilitários
+python-dateutil==2.8.2
+
+# Configuração
+python-dotenv==1.0.0

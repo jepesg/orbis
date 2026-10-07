@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <!-- Formas geométricas decorativas -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <i class="fas fa-circle-notch fa-spin-hover"></i>
+            </div>
+            <h1 class="auth-title">Orbis</h1>
+            <p class="auth-subtitle">Suas finanças em órbita</p>
+        </div>
+
+        {% if error %}
+        <div class="flash-message error-message">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form action="/auth/login" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email ou Nome de usuário</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="text" id="email" name="email" placeholder="Email ou Nome de usuário" required autofocus>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="password" name="password" placeholder="Sua senha" required>
+                    <i class="fas fa-eye toggle-password" onclick="togglePasswordVisibility('password')"></i>
+                </div>
+                <div class="forgot-password-link">
+                    <a href="/auth/forgot">Esqueceu a senha?</a>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-glow">Entrar</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Não tem uma conta? <a href="/auth/register" class="link-purple">Criar conta</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Função para alternar visibilidade da senha
+    function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling;
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}
