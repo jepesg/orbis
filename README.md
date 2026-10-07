@@ -137,6 +137,56 @@ http://localhost:8000
 
 ---
 
+## 🌐 Deploy em Produção (Supabase + Render)
+
+O Orbis está 100% preparado para ser hospedado gratuitamente usando **Supabase** (Banco de Dados PostgreSQL gerenciado) e **Render** (Hospedagem da aplicação web FastAPI).
+
+### 1. Configurando o Banco de Dados no Supabase
+1. Crie uma conta gratuita em [supabase.com](https://supabase.com).
+2. Crie um novo projeto (ex: `orbis-financas`). Defina uma senha forte para o banco e anote-a.
+3. Escolha uma região próxima (ex: *São Paulo - sa-east-1*).
+4. No menu lateral do projeto, vá em **Project Settings** (ícone de engrenagem) > **Database**.
+5. Em **Connection string**, selecione a aba **URI**:
+   - Modo recomendado: **Session Pooler** (Porta `5432` ou `6543`) ou **Direct connection**.
+   - Copie a URI fornecida e substitua `[YOUR-PASSWORD]` pela senha criada no passo 2.
+   - Exemplo: `postgresql://postgres.[REF]:sua_senha@aws-0-sa-east-1.pooler.supabase.com:6543/postgres`
+
+### 2. Subindo o Código no GitHub
+1. Inicialize o repositório git na pasta do projeto:
+   ```bash
+   git init
+   git add .
+   git commit -m "feat: lancamento inicial orbis finance"
+   ```
+2. Crie um repositório no seu GitHub (público ou privado).
+3. Conecte o repositório local e envie os arquivos:
+   ```bash
+   git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+### 3. Criando o Web Service no Render
+1. Acesse [render.com](https://render.com) e conecte sua conta do GitHub.
+2. Clique em **New +** > **Web Service**.
+3. Selecione o repositório do Orbis que você acabou de subir.
+4. Preencha as configurações:
+   - **Name**: `orbis-finance` (ou outro nome desejado)
+   - **Language**: `Python 3`
+   - **Region**: Mesma ou próxima do banco (ex: *Ohio* ou *Frankfurt*)
+   - **Branch**: `main`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Plan**: `Free`
+5. Na seção **Environment Variables** (Variáveis de Ambiente), adicione:
+   - `DATABASE_URL`: A URI que você copiou do Supabase com sua senha.
+   - `SECRET_KEY`: Uma chave secreta alfanumérica de pelo menos 32 caracteres (ou clique em Generate).
+   - `PYTHON_VERSION`: `3.10.13`
+6. Clique em **Create Web Service**.
+7. O Render fará o build e iniciará a aplicação. Quando o status mudar para **Live**, seu SaaS estará online no link fornecido (ex: `https://orbis-finance.onrender.com`) com HTTPS ativo e tabelas criadas automaticamente!
+
+---
+
 ## 📱 Funcionalidades
 
 ### Autenticação
