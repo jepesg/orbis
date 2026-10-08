@@ -81,7 +81,7 @@
             <!-- Formulário Adição -->
             <div class="card form-card glow-hover">
                 <h3 class="card-title mb-4">Nova Transação</h3>
-                <form id="form-transacao" onsubmit="adicionarTransacao(event)">
+                <form id="form-transacao">
                     <div class="form-grid">
                         <div class="form-group col-span-2">
                             <label for="descricao">Descrição</label>
@@ -208,5 +208,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/js/transactions.js"></script>
+<script src="/js/transactions.js?v=20261008-2"></script>
 {% endblock %}

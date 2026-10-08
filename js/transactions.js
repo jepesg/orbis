@@ -8,6 +8,7 @@
 let tipoAtual = 'receita';
 let transacoesAtuais = [];
 let categoriasAtuais = [];
+let envioTransacaoEmAndamento = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const dataInput = document.getElementById('data');
@@ -179,6 +180,7 @@ function renderizarTabela(transacoes) {
  */
 async function adicionarTransacao(event) {
     event.preventDefault();
+    if (envioTransacaoEmAndamento) return;
 
     // Coleta os dados do formulário
     const descricao = document.getElementById('descricao').value.trim();
@@ -203,6 +205,13 @@ async function adicionarTransacao(event) {
         category_id: categoriaId ? parseInt(categoriaId) : null
     };
 
+    envioTransacaoEmAndamento = true;
+    const botaoEnviar = document.querySelector('#form-transacao button[type="submit"]');
+    if (botaoEnviar) {
+        botaoEnviar.disabled = true;
+        botaoEnviar.setAttribute('aria-busy', 'true');
+    }
+
     try {
         const resposta = await fetch('/api/transactions', {
             method: 'POST',
@@ -212,7 +221,9 @@ async function adicionarTransacao(event) {
 
         if (resposta.ok) {
             // Limpa o formulário e recarrega a tabela
-            document.getElementById('form-transacao').reset();
+            const formulario = document.getElementById('form-transacao');
+            formulario.reset();
+            document.getElementById('data').value = new Date().toISOString().slice(0, 10);
             mostrarNotificacao('Transação adicionada com sucesso!', 'sucesso');
             carregarTransacoes();
         } else {
@@ -222,6 +233,12 @@ async function adicionarTransacao(event) {
     } catch (erro) {
         console.error("Erro ao adicionar transação:", erro);
         mostrarNotificacao('Erro de conexão. Verifique o servidor.', 'erro');
+    } finally {
+        envioTransacaoEmAndamento = false;
+        if (botaoEnviar) {
+            botaoEnviar.disabled = false;
+            botaoEnviar.removeAttribute('aria-busy');
+        }
     }
 }
 

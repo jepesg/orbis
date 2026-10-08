@@ -18,7 +18,7 @@ def materialize_monthly_transactions(db: Session, user_id: int, through: date | 
         Transaction.user_id == user_id,
         Transaction.recurring.is_(True),
         Transaction.recurring_parent_id.is_(None),
-    ).all()
+    ).order_by(Transaction.id).with_for_update().all()
     changed = False
     for source in sources:
         first_period = source.recurring_period or source.date.strftime("%Y-%m")
