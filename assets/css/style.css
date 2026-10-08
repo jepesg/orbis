@@ -362,7 +362,7 @@ button, input, select, textarea {
    ========================================================================== */
 .charts-section {
     display: grid;
-    grid-template-columns: 65% 35%;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.9fr);
     gap: 24px;
     margin-bottom: 32px;
 }
@@ -772,7 +772,7 @@ input:checked + .slider:before {
    ========================================================================== */
 .grid-layout-transactions {
     display: grid;
-    grid-template-columns: 35% 65%;
+    grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.55fr);
     gap: 24px;
 }
 
@@ -992,45 +992,114 @@ input:checked + .slider:before {
    15. Responsividade
    ========================================================================== */
 @media (max-width: 1200px) {
-    .summary-cards {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .charts-section {
-        grid-template-columns: 1fr;
-    }
-    
-    .grid-layout-transactions {
-        grid-template-columns: 1fr;
-    }
+    .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .charts-section, .grid-layout-transactions { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 768px) {
+    html, body { min-width: 320px; overflow-x: hidden; }
+    body.menu-open { overflow: hidden; }
+
     .sidebar {
         transform: translateX(-100%);
+        width: min(290px, 84vw);
+        height: 100dvh;
+        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 120;
     }
-    
+    .sidebar.is-open { transform: translateX(0); }
+    .sidebar-backdrop.is-visible {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 110;
+        background: rgba(0, 0, 0, 0.68);
+        backdrop-filter: blur(3px);
+    }
+
+    .mobile-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        left: 12px;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--cor-borda-sutil);
+        border-radius: var(--radius-md);
+        background: var(--cor-card-escuro);
+        color: var(--cor-branco);
+        font-size: 1.1rem;
+        cursor: pointer;
+        z-index: 130;
+        box-shadow: var(--shadow-sutil);
+    }
+    .mobile-menu-toggle:focus-visible {
+        outline: 2px solid var(--cor-roxo-vibrante);
+        outline-offset: 2px;
+    }
+
     .main-content {
         margin-left: 0;
-        padding: 16px;
-    }
-    
-    .summary-cards {
-        grid-template-columns: 1fr;
-    }
-    
-    .filters-bar {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .search-box, .filter-box select {
         width: 100%;
+        min-width: 0;
+        padding: max(72px, calc(60px + env(safe-area-inset-top))) 16px 24px;
     }
-    
     .content-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: 12px;
+        margin-bottom: 22px;
     }
+    .page-title { font-size: clamp(1.35rem, 5vw, 1.65rem); overflow-wrap: anywhere; }
+    .header-actions { width: 100%; }
+    .header-actions .btn { width: 100%; }
+
+    .summary-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .summary-card { min-width: 0; padding: 16px 12px; gap: 10px; }
+    .card-icon { flex: 0 0 40px; width: 40px; height: 40px; font-size: 1.15rem; }
+    .card-label { font-size: 0.72rem; letter-spacing: 0.25px; }
+    .card-value { font-size: clamp(1rem, 4vw, 1.35rem); overflow-wrap: anywhere; }
+
+    .charts-section { gap: 16px; margin-bottom: 20px; }
+    .chart-container { height: 250px; min-width: 0; }
+    .grid-layout-transactions { gap: 16px; }
+    .card { min-width: 0; padding: 18px; }
+
+    .filters-bar { flex-direction: column; gap: 12px; align-items: stretch; }
+    .search-box, .filter-box, .filter-box select { width: 100%; }
+    .table-responsive {
+        margin: 0 -4px;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+    .orbis-table { min-width: 580px; }
+
+    .modal-overlay { padding: 12px; overflow-y: auto; align-items: flex-start; }
+    .modal-card { max-width: 100%; margin: auto 0; padding: 22px 18px; }
+    .modal-actions { flex-wrap: wrap; }
+    .modal-actions .btn { flex: 1 1 140px; }
+
+    .auth-card { width: calc(100% - 32px); padding: 28px 22px; }
+}
+
+@media (max-width: 480px) {
+    .main-content { padding-right: 12px; padding-left: 12px; }
+    .summary-cards { grid-template-columns: minmax(0, 1fr); }
+    .summary-card { padding: 14px 16px; }
+    .summary-card .card-value { font-size: 1.25rem; }
+    .form-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .col-span-2 { grid-column: auto; }
+    .tabs-container { gap: 8px; }
+    .tab-btn { flex: 1; justify-content: center; padding: 11px 10px; font-size: 0.9rem; }
+    .chart-container { height: 220px; }
+    .table-card .card-header { gap: 10px; align-items: flex-start; }
+    .table-card .card-title { font-size: 1rem; }
+    .table-card .btn-sm { flex: 0 0 auto; }
 }

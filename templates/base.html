@@ -23,5 +23,38 @@
     <!-- Área para scripts adicionais -->
     {% block scripts %}
     {% endblock %}
+    <script>
+        (() => {
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.sidebar-backdrop');
+            const buttons = document.querySelectorAll('.mobile-menu-toggle');
+            if (!sidebar || !backdrop || !buttons.length) return;
+
+            const setMenuOpen = (open) => {
+                sidebar.classList.toggle('is-open', open);
+                backdrop.classList.toggle('is-visible', open);
+                buttons.forEach((button) => {
+                    button.setAttribute('aria-expanded', String(open));
+                    button.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+                    button.innerHTML = `<i class="fas ${open ? 'fa-times' : 'fa-bars'}" aria-hidden="true"></i>`;
+                });
+                document.body.classList.toggle('menu-open', open);
+            };
+
+            buttons.forEach((button) => button.addEventListener('click', () => {
+                setMenuOpen(!sidebar.classList.contains('is-open'));
+            }));
+            backdrop.addEventListener('click', () => setMenuOpen(false));
+            sidebar.querySelectorAll('.nav-link:not(.disabled)').forEach((link) => {
+                link.addEventListener('click', () => setMenuOpen(false));
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') setMenuOpen(false);
+            });
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768) setMenuOpen(false);
+            });
+        })();
+    </script>
 </body>
 </html>
