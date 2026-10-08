@@ -325,8 +325,8 @@ async function carregarTransacoesRecentes() {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${formatarData(t.date)}</td>
-                    <td><strong>${t.description}</strong></td>
-                    <td><span class="badge ${classeBadge}" style="background-color: ${t.category_color}22; color: ${t.category_color}">${t.category_name || 'Sem categoria'}</span></td>
+                    <td><strong>${escaparHtml(t.description)}</strong></td>
+                    <td><span class="badge ${classeBadge}" style="background-color: ${corSegura(t.category_color)}22; color: ${corSegura(t.category_color)}">${escaparHtml(t.category_name || 'Sem categoria')}</span></td>
                     <td class="text-right ${classeCor} font-medium">${sinal} ${formatarMoeda(t.amount)}</td>
                 `;
                 tbody.appendChild(tr);
@@ -374,4 +374,12 @@ function getBadgeClass(categoria) {
         'Lazer': 'badge-lazer'
     };
     return mapa[categoria] || 'badge-default';
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, caractere => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));
+}
+
+function corSegura(valor) {
+    return /^#[0-9a-f]{6}$/i.test(valor || '') ? valor : '#6b7280';
 }

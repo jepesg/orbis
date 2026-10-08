@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime
+from datetime import date
 from app.database import get_db
 from app.auth import get_current_user
 from app.models import User, Transaction, Category
@@ -14,6 +14,7 @@ from app.schemas import DashboardSummary, ChartData
 from pathlib import Path
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict
+from app.recurrence import materialize_monthly_transactions
 
 router = APIRouter(tags=["dashboard"])
 
@@ -28,11 +29,13 @@ async def dashboard_page(request: Request, user: User = Depends(get_current_user
 @router.get("/api/dashboard/summary", response_model=DashboardSummary)
 async def get_summary(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retorna o resumo mensal do dashboard."""
-    hoje = datetime.now()
+    hoje = date.today()
     inicio_mes = hoje.replace(day=1)
+    materialize_monthly_transactions(db, user.id, hoje)
     
     transacoes = db.query(Transaction).filter(
         Transaction.user_id == user.id,
+        Transaction.recurrence_skipped.is_(False),
         Transaction.date >= inicio_mes
     ).all()
     
@@ -52,12 +55,14 @@ async def get_summary(user: User = Depends(get_current_user), db: Session = Depe
 @router.get("/api/dashboard/chart", response_model=ChartData)
 async def get_chart_data(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retorna os dados para renderizar os gráficos."""
-    hoje = datetime.now()
+    hoje = date.today()
     seis_meses_atras = hoje - relativedelta(months=5)
     inicio_periodo = seis_meses_atras.replace(day=1)
     
+    materialize_monthly_transactions(db, user.id, hoje)
     transacoes = db.query(Transaction).filter(
         Transaction.user_id == user.id,
+        Transaction.recurrence_skipped.is_(False),
         Transaction.date >= inicio_periodo
     ).all()
     
@@ -88,7 +93,8 @@ async def get_chart_data(user: User = Depends(get_current_user), db: Session = D
 @router.get("/api/transactions/recent")
 async def get_recent_transactions(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Retorna as transações mais recentes."""
-    transacoes = db.query(Transaction).filter(Transaction.user_id == user.id)\
+    materialize_monthly_transactions(db, user.id)
+    transacoes = db.query(Transaction).filter(Transaction.user_id == user.id, Transaction.recurrence_skipped.is_(False))\
                    .order_by(Transaction.date.desc()).limit(5).all()
     
     result = []

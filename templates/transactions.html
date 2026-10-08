@@ -88,7 +88,7 @@
                             <label for="valor">Valor</label>
                             <div class="input-wrapper">
                                 <span class="input-prefix">R$</span>
-                                <input type="number" id="valor" name="valor" step="0.01" min="0" placeholder="0.00" required>
+                                <input type="number" id="valor" name="valor" step="0.01" min="0.01" placeholder="0,00" required>
                             </div>
                         </div>
 
@@ -107,13 +107,14 @@
 
                         <div class="form-group col-span-2 flex-between mt-2">
                             <label class="toggle-label" for="recorrente">
-                                Transação Recorrente?
+                                Repetir mensalmente
                             </label>
                             <label class="switch">
                                 <input type="checkbox" id="recorrente" name="recorrente">
                                 <span class="slider round"></span>
                             </label>
                         </div>
+                        <p class="col-span-2 text-gray" style="font-size: 0.8rem; margin-top: -10px;">Gera um lançamento a cada mês até você encerrar a recorrência.</p>
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-block btn-glow mt-4">
@@ -176,7 +177,7 @@
             
             <div class="form-group">
                 <label for="edit-valor">Valor</label>
-                <input type="number" id="edit-valor" step="0.01" min="0" required>
+                <input type="number" id="edit-valor" step="0.01" min="0.01" required>
             </div>
             
             <div class="form-grid">

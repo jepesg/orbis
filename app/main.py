@@ -8,6 +8,7 @@ from pathlib import Path
 import logging
 
 from app.database import engine, Base
+from sqlalchemy import inspect, text
 from app.routers import auth, dashboard, transactions
 
 # Configuração de logging
@@ -51,8 +52,14 @@ async def startup_event():
     Cria as tabelas no PostgreSQL/Supabase automaticamente caso não existam.
     """
     logger.info("Iniciando Orbis... Conectando ao banco de dados...")
-    try:
-        Base.metadata.create_all(bind=engine)
-        logger.info("Tabelas sincronizadas com sucesso no banco de dados!")
-    except Exception as erro:
-        logger.error(f"Aviso ao inicializar tabelas: {erro}")
+    Base.metadata.create_all(bind=engine)
+    # create_all não altera tabelas existentes; adiciona colunas mensais em bases antigas.
+    columns = {column["name"] for column in inspect(engine).get_columns("transactions")}
+    with engine.begin() as connection:
+        if "recurring_parent_id" not in columns:
+            connection.execute(text("ALTER TABLE transactions ADD COLUMN recurring_parent_id INTEGER REFERENCES transactions(id)"))
+        if "recurring_period" not in columns:
+            connection.execute(text("ALTER TABLE transactions ADD COLUMN recurring_period VARCHAR(7)"))
+        if "recurrence_skipped" not in columns:
+            connection.execute(text("ALTER TABLE transactions ADD COLUMN recurrence_skipped BOOLEAN NOT NULL DEFAULT FALSE"))
+    logger.info("Banco de dados pronto.")

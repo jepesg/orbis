@@ -10,6 +10,8 @@ let transacoesAtuais = [];
 let categoriasAtuais = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    const dataInput = document.getElementById('data');
+    if (dataInput && !dataInput.value) dataInput.value = new Date().toISOString().slice(0, 10);
     carregarCategorias();
     carregarTransacoes();
     configurarEventos();
@@ -77,7 +79,7 @@ async function carregarCategorias() {
     if (selectAdd) {
         selectAdd.innerHTML = '<option value="">Selecione a categoria...</option>';
         categoriasAtuais.forEach(cat => {
-            selectAdd.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            selectAdd.insertAdjacentHTML('beforeend', `<option value="${cat.id}">${escaparHtml(cat.name)}</option>`);
         });
     }
 
@@ -85,7 +87,7 @@ async function carregarCategorias() {
     if (selectEdit) {
         selectEdit.innerHTML = '';
         categoriasAtuais.forEach(cat => {
-            selectEdit.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            selectEdit.insertAdjacentHTML('beforeend', `<option value="${cat.id}">${escaparHtml(cat.name)}</option>`);
         });
     }
 
@@ -93,7 +95,7 @@ async function carregarCategorias() {
     if (selectFilter) {
         selectFilter.innerHTML = '<option value="todas">Todas as categorias</option>';
         categoriasAtuais.forEach(cat => {
-            selectFilter.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+            selectFilter.insertAdjacentHTML('beforeend', `<option value="${cat.id}">${escaparHtml(cat.name)}</option>`);
         });
     }
 }
@@ -149,8 +151,8 @@ function renderizarTabela(transacoes) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${formatarData(t.date)}</td>
-            <td><strong>${t.description}</strong></td>
-            <td><span class="badge" style="background-color: ${t.category_color || '#6b7280'}22; color: ${t.category_color || '#6b7280'}">${t.category_name || 'Sem categoria'}</span></td>
+            <td><strong>${escaparHtml(t.description)}</strong>${t.recurring ? ' <span class="badge">Mensal</span>' : ''}</td>
+            <td><span class="badge" style="background-color: ${corSegura(t.category_color)}22; color: ${corSegura(t.category_color)}">${escaparHtml(t.category_name || 'Sem categoria')}</span></td>
             <td class="${classeCor} font-medium">${sinal} ${formatarMoeda(t.amount)}</td>
             <td>
                 <div class="action-btns">
@@ -227,7 +229,11 @@ async function adicionarTransacao(event) {
  * Exclui uma transação após confirmação do usuário
  */
 async function excluirTransacao(id) {
-    if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
+    const transacao = transacoesAtuais.find(t => t.id === id);
+    const pergunta = transacao?.recurring && !transacao?.recurring_parent_id
+        ? 'Excluir esta série mensal? Os lançamentos futuros serão removidos e o histórico passado será mantido.'
+        : 'Tem certeza que deseja excluir esta transação?';
+    if (!confirm(pergunta)) return;
 
     try {
         const resposta = await fetch(`/api/transactions/${id}`, {
@@ -439,6 +445,14 @@ function formatarData(dataString) {
         return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
     return dataString;
+}
+
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, caractere => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));
+}
+
+function corSegura(valor) {
+    return /^#[0-9a-f]{6}$/i.test(valor || '') ? valor : '#6b7280';
 }
 
 /**

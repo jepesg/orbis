@@ -31,18 +31,21 @@ async def register(
     name: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    confirm_password: str = Form(...),
     db: Session = Depends(get_db)
 ):
     """Cria um novo usuário e suas categorias padrão."""
+    email = email.strip().lower()
+    name = name.strip()
+    if len(password) < 8 or password != confirm_password:
+        return templates.TemplateResponse("register.html", {"request": request, "error": "As senhas devem coincidir e ter pelo menos 8 caracteres."}, status_code=400)
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
-        return RedirectResponse(url="/auth/register", status_code=status.HTTP_303_SEE_OTHER)
+        return templates.TemplateResponse("register.html", {"request": request, "error": "Este e-mail já está cadastrado."}, status_code=400)
 
     hashed_pw = hash_password(password)
     new_user = User(name=name, email=email, password_hash=hashed_pw)
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
 
     # Categorias padrão
     categorias = [
@@ -61,11 +64,13 @@ async def register(
         {"name": "Outros", "type": "despesa", "color": "#6b7280", "icon": None},
     ]
 
-    for cat in categorias:
-        nova_cat = Category(**cat, user_id=new_user.id)
-        db.add(nova_cat)
-    
-    db.commit()
+    try:
+        for cat in categorias:
+            new_user.categories.append(Category(**cat))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     return RedirectResponse(url="/auth/login", status_code=status.HTTP_303_SEE_OTHER)
 
@@ -77,14 +82,14 @@ async def login(
     db: Session = Depends(get_db)
 ):
     """Autentica o usuário e cria o token JWT."""
-    user = db.query(User).filter(User.email == email).first()
+    user = db.query(User).filter(User.email == email.strip().lower()).first()
     if not user or not verify_password(password, user.password_hash):
         return RedirectResponse(url="/auth/login", status_code=status.HTTP_303_SEE_OTHER)
 
     access_token = create_access_token(data={"sub": user.email})
     
     response = RedirectResponse(url="/dashboard", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True)
+    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, samesite="lax", secure=request.url.scheme == "https", max_age=60 * 60 * 24)
     
     return response
 

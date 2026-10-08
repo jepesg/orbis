@@ -1,7 +1,7 @@
 """
 Esquemas Pydantic para validação de dados.
 """
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 from datetime import date, datetime
 from typing import Optional, List
 
@@ -18,8 +18,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
     """Esquema para requisição de login."""
@@ -35,8 +34,15 @@ class CategoryCreate(BaseModel):
     """Esquema para criação de categoria."""
     name: str
     type: str
-    color: str
+    color: str = "#6b7280"
     icon: Optional[str] = None
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, value):
+        if value not in {"receita", "despesa"}:
+            raise ValueError("Tipo deve ser receita ou despesa")
+        return value
 
 class CategoryResponse(BaseModel):
     """Esquema para resposta de categoria."""
@@ -46,22 +52,28 @@ class CategoryResponse(BaseModel):
     color: str
     icon: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionCreate(BaseModel):
     """Esquema para criação de transação."""
     description: str
-    amount: float
+    amount: float = Field(gt=0)
     type: str
     date: date
     recurring: bool = False
     category_id: Optional[int] = None
 
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, value):
+        if value not in {"receita", "despesa"}:
+            raise ValueError("Tipo deve ser receita ou despesa")
+        return value
+
 class TransactionUpdate(BaseModel):
     """Esquema para atualização de transação."""
     description: Optional[str] = None
-    amount: Optional[float] = None
+    amount: Optional[float] = Field(default=None, gt=0)
     type: Optional[str] = None
     date: Optional[date] = None
     recurring: Optional[bool] = None
@@ -75,13 +87,13 @@ class TransactionResponse(BaseModel):
     type: str
     date: date
     recurring: bool
+    recurring_parent_id: Optional[int] = None
     category_id: Optional[int]
     category_name: Optional[str] = None
     category_color: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DashboardSummary(BaseModel):
     """Esquema para resumo do dashboard."""

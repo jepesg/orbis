@@ -10,7 +10,8 @@ load_dotenv()
 
 class Settings(BaseSettings):
     """Classe de configuração da aplicação Orbis."""
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/orbis"
+    # SQLite keeps a fresh local checkout usable without requiring a separate server.
+    DATABASE_URL: str = "sqlite:///./orbis.db"
     SECRET_KEY: str = secrets.token_hex(32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
@@ -26,6 +27,8 @@ class Settings(BaseSettings):
         """
         if isinstance(valor, str) and valor.startswith("postgres://"):
             return valor.replace("postgres://", "postgresql://", 1)
+        if isinstance(valor, str) and valor.startswith("postgresql://") and "sslmode" not in valor and any(host in valor for host in ("render.com", "supabase.co", "pooler.supabase.com")):
+            return valor + ("&" if "?" in valor else "?") + "sslmode=require"
         return valor
 
 settings = Settings()

@@ -43,9 +43,13 @@ class Transaction(Base):
     type = Column(String(10), nullable=False)  # 'receita' ou 'despesa'
     date = Column(Date, nullable=False)
     recurring = Column(Boolean, default=False)
+    recurring_parent_id = Column(Integer, ForeignKey("transactions.id"), nullable=True, index=True)
+    recurring_period = Column(String(7), nullable=True)
+    recurrence_skipped = Column(Boolean, nullable=False, default=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="transactions")
     category = relationship("Category", back_populates="transactions")
+    recurring_parent = relationship("Transaction", remote_side=[id], foreign_keys=[recurring_parent_id])
