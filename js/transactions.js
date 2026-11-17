@@ -10,9 +10,15 @@ let transacoesAtuais = [];
 let categoriasAtuais = [];
 let envioTransacaoEmAndamento = false;
 
+function dataLocalISO() {
+    const agora = new Date();
+    const fuso = agora.getTimezoneOffset() * 60000;
+    return new Date(agora.getTime() - fuso).toISOString().slice(0, 10);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const dataInput = document.getElementById('data');
-    if (dataInput && !dataInput.value) dataInput.value = new Date().toISOString().slice(0, 10);
+    if (dataInput && !dataInput.value) dataInput.value = dataLocalISO();
     carregarCategorias();
     carregarTransacoes();
     configurarEventos();
@@ -223,7 +229,7 @@ async function adicionarTransacao(event) {
             // Limpa o formulário e recarrega a tabela
             const formulario = document.getElementById('form-transacao');
             formulario.reset();
-            document.getElementById('data').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('data').value = dataLocalISO();
             mostrarNotificacao('Transação adicionada com sucesso!', 'sucesso');
             carregarTransacoes();
         } else {
@@ -248,7 +254,7 @@ async function adicionarTransacao(event) {
 async function excluirTransacao(id) {
     const transacao = transacoesAtuais.find(t => t.id === id);
     const pergunta = transacao?.recurring && !transacao?.recurring_parent_id
-        ? 'Excluir esta série mensal? Os lançamentos futuros serão removidos e o histórico passado será mantido.'
+        ? 'Excluir esta série mensal e todas as cobranças ou receitas vinculadas?'
         : 'Tem certeza que deseja excluir esta transação?';
     if (!confirm(pergunta)) return;
 

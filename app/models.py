@@ -1,7 +1,7 @@
 """
 Modelos do banco de dados (SQLAlchemy).
 """
-from sqlalchemy import Column, Integer, String, Numeric, Date, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, Date, Boolean, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -53,3 +53,12 @@ class Transaction(Base):
     user = relationship("User", back_populates="transactions")
     category = relationship("Category", back_populates="transactions")
     recurring_parent = relationship("Transaction", remote_side=[id], foreign_keys=[recurring_parent_id])
+
+class RecurrenceExclusion(Base):
+    """Registra períodos removidos sem manter a cobrança excluída."""
+    __tablename__ = "recurrence_exclusions"
+    __table_args__ = (UniqueConstraint("parent_id", "period", name="uq_recurrence_exclusion_parent_period"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    parent_id = Column(Integer, ForeignKey("transactions.id"), nullable=False, index=True)
+    period = Column(String(7), nullable=False)

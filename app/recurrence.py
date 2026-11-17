@@ -4,7 +4,7 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.models import Transaction
+from app.models import RecurrenceExclusion, Transaction
 
 
 def _month_after(year: int, month: int):
@@ -25,11 +25,15 @@ def materialize_monthly_transactions(db: Session, user_id: int, through: date | 
         year, month = (int(value) for value in first_period.split("-"))
         while (year, month) < (through.year, through.month):
             period = f"{year:04d}-{month:02d}"
+            excluded = db.query(RecurrenceExclusion.id).filter(
+                RecurrenceExclusion.parent_id == source.id,
+                RecurrenceExclusion.period == period,
+            ).first()
             exists = db.query(Transaction.id).filter(
                 Transaction.recurring_parent_id == source.id,
                 Transaction.recurring_period == period,
             ).first()
-            if not exists:
+            if not exists and not excluded:
                 day = min(source.date.day, monthrange(year, month)[1])
                 db.add(Transaction(
                     description=source.description,

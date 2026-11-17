@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
 from app.auth import get_current_user
-from app.models import User, Transaction, Category
+from app.models import User, Transaction, Category, RecurrenceExclusion
 from app.schemas import TransactionCreate, TransactionUpdate, TransactionResponse, CategoryCreate, CategoryResponse
 from pathlib import Path
 from datetime import date
@@ -121,16 +121,40 @@ async def update_transaction(
         raise HTTPException(status_code=404, detail="Transação não encontrada")
 
     update_data = transacao_in.model_dump(exclude_unset=True)
+    if "description" in update_data:
+        update_data["description"] = update_data["description"].strip()
+        if not update_data["description"]:
+            raise HTTPException(status_code=422, detail="A descrição não pode ficar vazia")
     if "category_id" in update_data and update_data["category_id"]:
         categoria = db.query(Category).filter(Category.id == update_data["category_id"], Category.user_id == user.id).first()
         if not categoria or categoria.type != update_data.get("type", transacao.type):
             raise HTTPException(status_code=422, detail="Categoria inválida para este lançamento")
-    if "type" in update_data and update_data["type"] not in {"receita", "despesa"}:
-        raise HTTPException(status_code=422, detail="Tipo inválido")
     if "type" in update_data and "category_id" not in update_data and transacao.category_id:
         categoria_atual = db.query(Category).filter(Category.id == transacao.category_id, Category.user_id == user.id).first()
         if categoria_atual and categoria_atual.type != update_data["type"]:
             raise HTTPException(status_code=422, detail="Selecione uma categoria compatível com o novo tipo")
+    if transacao.recurring_parent_id is None:
+        if update_data.get("recurring") is False and transacao.recurring:
+            db.query(Transaction).filter(
+                Transaction.recurring_parent_id == transacao.id,
+                Transaction.date >= date.today(),
+            ).delete(synchronize_session=False)
+            db.query(Transaction).filter(
+                Transaction.recurring_parent_id == transacao.id,
+                Transaction.date < date.today(),
+            ).update({Transaction.recurring_parent_id: None}, synchronize_session=False)
+        if update_data.get("date") is not None and transacao.recurring:
+            db.query(Transaction).filter(
+                Transaction.recurring_parent_id == transacao.id,
+                Transaction.date >= date.today(),
+            ).delete(synchronize_session=False)
+            db.query(Transaction).filter(
+                Transaction.recurring_parent_id == transacao.id,
+                Transaction.date < date.today(),
+            ).update({Transaction.recurring_parent_id: None}, synchronize_session=False)
+            transacao.recurring_period = update_data["date"].strftime("%Y-%m")
+        if update_data.get("recurring") is True and not transacao.recurring:
+            transacao.recurring_period = update_data.get("date", transacao.date).strftime("%Y-%m")
     for key, value in update_data.items():
         setattr(transacao, key, value)
         
@@ -146,20 +170,18 @@ async def delete_transaction(id: int, user: User = Depends(get_current_user), db
         raise HTTPException(status_code=404, detail="Transação não encontrada")
 
     if transacao.recurring_parent_id is not None:
-        # Registra a exclusão para que a sincronização mensal não recrie o lançamento.
-        transacao.recurrence_skipped = True
+        # Apaga a ocorrência; a exclusão do período impede que a série a recrie.
+        period = transacao.recurring_period or transacao.date.strftime("%Y-%m")
+        db.add(RecurrenceExclusion(parent_id=transacao.recurring_parent_id, period=period))
+        db.delete(transacao)
         db.commit()
         return {"message": "Lançamento mensal excluído"}
         
     if transacao.recurring and transacao.recurring_parent_id is None:
-        # Encerrar a série remove cobranças futuras e preserva o histórico já lançado.
+        db.query(RecurrenceExclusion).filter(RecurrenceExclusion.parent_id == transacao.id).delete(synchronize_session=False)
+        # Excluir a série apaga do banco todas as ocorrências vinculadas.
         db.query(Transaction).filter(
             Transaction.recurring_parent_id == transacao.id,
-            Transaction.date < date.today(),
-        ).update({Transaction.recurring_parent_id: None}, synchronize_session=False)
-        db.query(Transaction).filter(
-            Transaction.recurring_parent_id == transacao.id,
-            Transaction.date >= date.today(),
         ).delete(synchronize_session=False)
     db.delete(transacao)
     db.commit()

@@ -56,12 +56,20 @@ class CategoryResponse(BaseModel):
 
 class TransactionCreate(BaseModel):
     """Esquema para criação de transação."""
-    description: str
+    description: str = Field(min_length=1, max_length=200)
     amount: float = Field(gt=0)
     type: str
     date: date
     recurring: bool = False
     category_id: Optional[int] = None
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value):
+        value = value.strip()
+        if not value:
+            raise ValueError("A descrição não pode ficar vazia")
+        return value
 
     @field_validator("type")
     @classmethod
@@ -72,12 +80,29 @@ class TransactionCreate(BaseModel):
 
 class TransactionUpdate(BaseModel):
     """Esquema para atualização de transação."""
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, min_length=1, max_length=200)
     amount: Optional[float] = Field(default=None, gt=0)
     type: Optional[str] = None
     date: Optional[date] = None
     recurring: Optional[bool] = None
     category_id: Optional[int] = None
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value):
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            raise ValueError("A descrição não pode ficar vazia")
+        return value
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, value):
+        if value not in {"receita", "despesa"}:
+            raise ValueError("Tipo deve ser receita ou despesa")
+        return value
 
 class TransactionResponse(BaseModel):
     """Esquema para resposta de transação."""
